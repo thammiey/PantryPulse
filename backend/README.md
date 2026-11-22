@@ -5,16 +5,16 @@ Everything else in PantryPulse (pantry, shopping list, recipes) stays on the pho
 
 - **API:** Node.js serverless function on Vercel — project `pantrypulse-api`, region `bom1` (Mumbai)
 - **Database:** Turso (libSQL/SQLite) — database **`pantrypulse`** only, in `aws-ap-south-1`
-- **Admin dashboard:** `https://pantrypulse-api.vercel.app/admin`
+- **Admin dashboard:** `https://pantry-pulse-backend.vercel.app/admin`
 
 ## How to access the backend
 
 | What you want | Where |
 |---|---|
 | See or edit raw data (users, listings, requests) | [Turso dashboard](https://app.turso.tech) → database **pantrypulse** → *Edit data* / *SQL shell* |
-| Moderate giveaways, see counts, newest users | `https://pantrypulse-api.vercel.app/admin` (enter your `ADMIN_KEY`) |
+| Moderate giveaways, see counts, newest users | `https://pantry-pulse-backend.vercel.app/admin` (enter your `ADMIN_KEY`) |
 | Deployments, logs, environment variables | [Vercel dashboard](https://vercel.com) → project **pantrypulse-api** |
-| Check the API is up | `https://pantrypulse-api.vercel.app/health` |
+| Check the API is up | `https://pantry-pulse-backend.vercel.app/health` |
 
 ## One-time setup (secrets)
 

@@ -71,7 +71,7 @@ import com.pantrypulse.app.notifications.ExpiryNotifier
 import kotlinx.coroutines.launch
 import com.pantrypulse.app.ui.community.CommunityProfileCard
 import com.pantrypulse.app.ui.community.CommunityViewModel
-import com.pantrypulse.app.ui.community.GiveawayFab
+import com.pantrypulse.app.data.community.ListingStatus
 import com.pantrypulse.app.ui.community.GiveAwayFormScreen
 import com.pantrypulse.app.ui.community.GiveawaysScreen
 import com.pantrypulse.app.ui.community.ShopPostScreen
@@ -211,16 +211,23 @@ private fun MainShell(vm: MainViewModel) {
                     onAdd = { showAddSheet = true },
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
-                if (currentRoute != Routes.GIVEAWAYS) {
-                    GiveawayFab(
-                        giveawayVm,
-                        onClick = {
-                            giveawayVm.setUrgency(false) // closest first
-                            nav.navigate(Routes.GIVEAWAYS) { popUpTo(Routes.HOME) { saveState = true }; launchSingleTop = true; restoreState = true }
-                        },
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 104.dp),
-                    )
+                // One floating button with a tidy menu of shortcuts; free food nearby comes first.
+                val freeNearby = giveawayVm.nearby.filter { it.status == ListingStatus.AVAILABLE }
+                val closest = freeNearby.minByOrNull { it.distanceKm ?: Double.MAX_VALUE }
+                val quickActions = buildList {
+                    if (currentRoute != Routes.GIVEAWAYS) add(QuickAction(
+                        Icons.Outlined.VolunteerActivism,
+                        if (closest == null) "Giveaways" else "${freeNearby.size} free nearby" + (closest.distanceLabel?.let { " · $it" } ?: ""),
+                        highlight = closest != null,
+                    ) {
+                        giveawayVm.setUrgency(false) // closest first
+                        nav.navigate(Routes.GIVEAWAYS) { popUpTo(Routes.HOME) { saveState = true }; launchSingleTop = true; restoreState = true }
+                    })
+                    add(QuickAction(Icons.Outlined.QrCodeScanner, "Scan barcode or QR") { nav.navigate("scan/barcode?mode=new") })
+                    add(QuickAction(Icons.Outlined.DocumentScanner, "Scan a receipt") { nav.navigate(Routes.SCAN_RECEIPT) })
+                    add(QuickAction(Icons.Outlined.Edit, "Type it in") { nav.navigate(Routes.editor()) })
                 }
+                QuickActionsFab(quickActions, badgeCount = freeNearby.size)
             }
         }
     }
