@@ -34,8 +34,20 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
 
+      # Robolectric downloads its Android SDK jar from Maven Central the first time tests run.
+      # Cache it, and retry once, so a flaky download doesn't block the release.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/robolectric
+          key: robolectric-jars-${{ hashFiles('gradle/libs.versions.toml') }}
+
       - name: Unit & UI tests
-        run: ./gradlew :app:testDebugUnitTest
+        run: |
+          ./gradlew :app:testDebugUnitTest || {
+            echo "Tests failed, retrying once in case the Robolectric download was flaky..."
+            sleep 20
+            ./gradlew :app:testDebugUnitTest
+          }
 
       # Optional but recommended: sign every build with YOUR key so each new APK installs over the
       # previous one. Add these repository secrets (Settings > Secrets and variables > Actions):
