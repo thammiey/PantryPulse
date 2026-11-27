@@ -18,12 +18,17 @@ data class LatLon(val lat: Double, val lon: Double)
 interface LocationProvider {
     fun hasPermission(context: Context): Boolean
     suspend fun current(context: Context): LatLon?
+    /** False when the phone's location switch is off. Tests keep the default (always on). */
+    fun isEnabled(context: Context): Boolean = true
 }
 
 class DeviceLocationProvider : LocationProvider {
     override fun hasPermission(context: Context) =
         ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    override fun isEnabled(context: Context): Boolean =
+        androidx.core.location.LocationManagerCompat.isLocationEnabled(context.getSystemService(Context.LOCATION_SERVICE) as LocationManager)
 
     @SuppressLint("MissingPermission")
     override suspend fun current(context: Context): LatLon? {

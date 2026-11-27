@@ -29,6 +29,7 @@ class AppContainer(
     val pantry = PantryRepository(db)
     val shopping = ShoppingRepository(db)
     val openFoodFacts = OpenFoodFactsClient()
+    val productUse = com.pantrypulse.app.data.remote.ProductUseClient()
     val mealDb = MealDbClient()
     val foodRescue = FoodRescueClient()
     val community = CommunityRepository(context, communityApi, session, db)

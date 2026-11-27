@@ -9,7 +9,7 @@ package com.pantrypulse.app.domain
  */
 object ProductCode {
     private val digitalLink = Regex("""/01/(\d{14})(?:[/?#]|$)""")
-    private val elementString = Regex("""^\(?01\)?(\d{14})""")
+    private val elementString = Regex("""^\W*\(?01\)?(\d{14})""")
     private val queryParam = Regex("""[?&](?:gtin|ean|upc|barcode|code)=(\d{8,14})(?:[&#]|$)""", RegexOption.IGNORE_CASE)
 
     /** Returns the digits to look up, or null when the code holds no product number. */

@@ -182,6 +182,7 @@ fun PickupSettingsForm(cvm: CommunityViewModel, s: PickupSettings) {
     val c = PulseTheme.colors
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val ensureLocationOn = rememberEnsureLocationOn(cvm.container.location)
     var locating by remember { mutableStateOf(false) }
     var pickDate by remember { mutableStateOf(false) }
     var pickTime by remember { mutableStateOf<LocalDate?>(null) }
@@ -194,7 +195,7 @@ fun PickupSettingsForm(cvm: CommunityViewModel, s: PickupSettings) {
         }
     }
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r ->
-        if (r.values.any { it }) locate() else cvm.message("Location permission is needed to place your giveaway.")
+        if (r.values.any { it }) ensureLocationOn { locate() } else cvm.message("Location permission is needed to place your giveaway.")
     }
 
     PulseCard {
@@ -214,7 +215,7 @@ fun PickupSettingsForm(cvm: CommunityViewModel, s: PickupSettings) {
             )
         }
         SecondaryButton(if (s.location == null) "Use my location" else "Update location", {
-            if (cvm.container.location.hasPermission(context)) locate()
+            if (cvm.container.location.hasPermission(context)) ensureLocationOn { locate() }
             else permission.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))
         }, icon = Icons.Outlined.MyLocation)
         PulseTextField(s.areaLabel, { s.areaLabel = it.take(80) }, "Area shown publicly, e.g. Near City Library")

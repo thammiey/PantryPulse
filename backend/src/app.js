@@ -8,6 +8,7 @@
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash } from 'node:crypto';
 import { db, ensureSchema } from './db.js';
 import { adminPage } from './admin.js';
+import { AiError, medicineInfo } from './ai.js';
 
 // ---------------------------------------------------------------------------------
 // Small helpers
@@ -827,6 +828,15 @@ route('POST', '/listings/:id/release', true, (c) => release(c.user, c.params.id,
 route('POST', '/listings/:id/cancel-claim', true, (c) => cancelClaim(c.user, c.params.id));
 route('POST', '/listings/:id/picked-up', true, (c) => markPickedUp(c.user, c.params.id));
 route('POST', '/listings/:id/cancel', true, (c) => cancelListing(c.user, c.params.id));
+route('POST', '/ai/medicine', false, async (c) => {
+  const fwd = String(c.req.headers['x-forwarded-for'] ?? '').split(',')[0].trim();
+  try {
+    return await medicineInfo(c.body, { ip: fwd || c.req.socket?.remoteAddress || 'unknown' });
+  } catch (e) {
+    if (e instanceof AiError) throw new HttpError(e.status, e.code, e.message);
+    throw e;
+  }
+});
 route('GET', '/admin/api/overview', false, (c) => { requireAdmin(c.req); return adminOverview(); });
 route('POST', '/admin/api/listings/:id/remove', false, (c) => { requireAdmin(c.req); return adminRemove(c.params.id); });
 

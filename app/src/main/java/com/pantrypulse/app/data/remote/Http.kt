@@ -20,7 +20,11 @@ object Http {
         request(url, "POST", form.entries.joinToString("&") { "${encode(it.key)}=${encode(it.value)}" })
     }
 
-    private fun request(url: String, method: String, body: String?): String {
+    suspend fun postJson(url: String, json: String): String = withContext(Dispatchers.IO) {
+        request(url, "POST", json, "application/json; charset=UTF-8")
+    }
+
+    private fun request(url: String, method: String, body: String?, contentType: String = "application/x-www-form-urlencoded; charset=UTF-8"): String {
         val conn = URL(url).openConnection() as HttpURLConnection
         try {
             conn.requestMethod = method
@@ -30,7 +34,7 @@ object Http {
             conn.setRequestProperty("Accept", "application/json")
             if (body != null) {
                 conn.doOutput = true
-                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+                conn.setRequestProperty("Content-Type", contentType)
                 conn.outputStream.use { it.write(body.toByteArray()) }
             }
             val code = conn.responseCode

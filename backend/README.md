@@ -25,6 +25,8 @@ Secrets are never stored in the repository. Add them in **Vercel → pantrypulse
 | `TURSO_DATABASE_URL` | `libsql://pantrypulse-shajaurahman1.aws-ap-south-1.turso.io` (already set) |
 | `TURSO_AUTH_TOKEN` | Turso dashboard → database **pantrypulse** → *Create Token* (read & write). **Create it on the database, not the group**, so it can't reach any other database in your account. |
 | `ADMIN_KEY` | Any long random password of your choice; you type it on the `/admin` page. |
+| `GEMINI_API_KEY` | *(optional)* Free key from aistudio.google.com/apikey. Enables the AI "what is this medicine for" summary (`POST /ai/medicine`). Without it the app falls back to the FDA label lookup. Keep it only here, never in the app. |
+| `GEMINI_MODEL` | *(optional)* Gemini model name; defaults to `gemini-3.5-flash`. Change it if Google retires that name. |
 
 ## How claiming stays fair
 

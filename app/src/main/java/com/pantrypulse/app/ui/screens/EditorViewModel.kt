@@ -11,6 +11,13 @@ import com.pantrypulse.app.domain.Category
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+sealed interface UseState {
+    data object Idle : UseState
+    data object Loading : UseState
+    data class Found(val use: com.pantrypulse.app.domain.ProductUse) : UseState
+    data object None : UseState
+}
+
 sealed interface LookupState {
     data object Idle : LookupState
     data object Loading : LookupState
@@ -40,6 +47,11 @@ class EditorViewModel(private val container: AppContainer, private val productId
     var imageUrl by mutableStateOf<String?>(null)
     var notes by mutableStateOf("")
     var lookup by mutableStateOf<LookupState>(LookupState.Idle)
+        private set
+    var useInfo by mutableStateOf<UseState>(UseState.Idle)
+        private set
+    /** The name [useInfo] was looked up for, so a stale answer isn't shown after the name changes. */
+    var useInfoFor by mutableStateOf("")
         private set
     var error by mutableStateOf<String?>(null)
         private set
@@ -76,6 +88,19 @@ class EditorViewModel(private val container: AppContainer, private val productId
         locationId = locs.firstOrNull { it.name.equals(category.defaultLocation.label, true) }?.id ?: locationId
     }
 
+    /** Looks up what a medicine or cosmetic is for, from its name. Does nothing for food. */
+    fun loadUse() {
+        val n = name.trim()
+        if (n.isEmpty() || category.kind == com.pantrypulse.app.domain.ItemKind.FOOD) return
+        useInfoFor = n
+        useInfo = UseState.Loading
+        val kind = category.kind
+        viewModelScope.launch {
+            useInfo = runCatching { container.productUse.find(n, brand.trim().ifBlank { null }, kind) }
+                .getOrNull()?.let { UseState.Found(it) } ?: UseState.None
+        }
+    }
+
     /** Fills the form from a scanned barcode: our own history first, then Open Food Facts. */
     fun onBarcode(code: String) {
         barcode = code
@@ -88,6 +113,7 @@ class EditorViewModel(private val container: AppContainer, private val productId
                 unit = previous.unit; imageUrl = previous.imageUrl
                 previous.locationId?.let { locationId = it; locationTouched = true }
                 lookup = LookupState.Found("your pantry history")
+                loadUse()
                 return@launch
             }
             lookup = try {
@@ -98,7 +124,8 @@ class EditorViewModel(private val container: AppContainer, private val productId
                     imageUrl = info.imageUrl
                     selectCategory(info.category)
                     info.packageSize?.let { parsePackage(it) }
-                    LookupState.Found("Open Food Facts")
+                    loadUse()
+                    LookupState.Found(info.source)
                 }
             } catch (e: Exception) {
                 LookupState.Failed("Couldn't reach the product database. Check your connection or type the details in.")

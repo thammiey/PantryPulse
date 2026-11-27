@@ -170,6 +170,46 @@ fun EditorScreen(
             // Category
             CategoryDropdown(vm.category, vm::selectCategory)
 
+            // What medicines and cosmetics are for
+            if (vm.category.kind != com.pantrypulse.app.domain.ItemKind.FOOD) {
+                val isMedicine = vm.category.kind == com.pantrypulse.app.domain.ItemKind.MEDICINE
+                val shown = if (vm.useInfoFor == vm.name.trim()) vm.useInfo else UseState.Idle
+                PulseCard {
+                    EyebrowText("What it's used for")
+                    when (shown) {
+                        UseState.Idle -> {
+                            Text(
+                                "Scan the barcode or type the name, then see what this is for and how it is generally used.",
+                                style = MaterialTheme.typography.bodySmall, color = c.muted,
+                            )
+                            SecondaryButton("Show usage", { vm.loadUse() })
+                        }
+                        UseState.Loading -> Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(Modifier.size(18.dp), color = c.accent, strokeWidth = 2.dp)
+                            Spacer(Modifier.width(10.dp)); Text("Looking it up…", style = MaterialTheme.typography.bodySmall)
+                        }
+                        is UseState.Found -> {
+                            Text(shown.use.uses, style = MaterialTheme.typography.bodyMedium)
+                            shown.use.directions?.let {
+                                Text("How to use", style = MaterialTheme.typography.titleSmall)
+                                Text(it, style = MaterialTheme.typography.bodySmall)
+                            }
+                            shown.use.warnings?.let {
+                                Text(if (isMedicine) "Good to know" else "Care", style = MaterialTheme.typography.titleSmall)
+                                Text(it, style = MaterialTheme.typography.bodySmall)
+                            }
+                            Text("Source: ${shown.use.source}", style = MaterialTheme.typography.bodySmall, color = c.muted)
+                            if (isMedicine) Text(com.pantrypulse.app.domain.UseGuide.MEDICINE_DISCLAIMER, style = MaterialTheme.typography.bodySmall, color = c.accent)
+                        }
+                        UseState.None -> Text(
+                            if (isMedicine) "No usage information found for this name. Check the leaflet in the box or ask a pharmacist. Typing the brand or generic name (for example \"paracetamol\") can help."
+                            else "No usage information found for this product. Check the instructions on the pack.",
+                            style = MaterialTheme.typography.bodySmall, color = c.muted,
+                        )
+                    }
+                }
+            }
+
             // Location
             EyebrowText("Stored in")
             ChipRow {

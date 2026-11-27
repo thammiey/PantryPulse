@@ -87,12 +87,16 @@ fun CommunityProfileCard(vm: MainViewModel, cvm: CommunityViewModel, onOpenGivea
         if (u?.isShop != true && !isShop) {
             val alertsOn = (u?.notifyRadiusKm ?: 0.0) > 0.0
             var busy by remember { mutableStateOf(false) }
+            val ensureLocationOn = rememberEnsureLocationOn(cvm.container.location)
             fun apply(km: Double) {
-                busy = true
-                cvm.setAlerts(context, km) { err ->
-                    busy = false
-                    vm.message(err ?: if (km > 0) "You'll be alerted to giveaways within ${km.toInt()} km." else "Nearby giveaway alerts are off.")
+                val run = {
+                    busy = true
+                    cvm.setAlerts(context, km) { err ->
+                        busy = false
+                        vm.message(err ?: if (km > 0) "You'll be alerted to giveaways within ${km.toInt()} km." else "Nearby giveaway alerts are off.")
+                    }
                 }
+                if (km > 0) ensureLocationOn { run() } else run()
             }
             val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r ->
                 if (r.values.any { it }) apply(5.0) else vm.message("Location is needed to alert you about giveaways near you.")

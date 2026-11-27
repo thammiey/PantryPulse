@@ -105,18 +105,19 @@ fun GiveawaysScreen(
     val context = LocalContext.current
     val state by cvm.state.collectAsState()
     var selected by remember { mutableStateOf<Listing?>(null) }
+    val ensureLocationOn = rememberEnsureLocationOn(cvm.container.location)
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { r ->
-        if (r.values.any { it }) cvm.locate(context) else vm.message("Location is needed to find giveaways near you.")
+        if (r.values.any { it }) ensureLocationOn { cvm.locate(context) } else vm.message("Location is needed to find giveaways near you.")
     }
     fun locate() {
-        if (cvm.container.location.hasPermission(context)) cvm.locate(context)
+        if (cvm.container.location.hasPermission(context)) ensureLocationOn { cvm.locate(context) }
         else permission.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION))
     }
     LaunchedEffect(Unit) { cvm.message = { vm.message(it) } }
     LaunchedEffect(state.connected) {
         if (state.connected) {
             cvm.refreshAll()
-            if (cvm.location == null && cvm.container.location.hasPermission(context)) cvm.locate(context)
+            if (cvm.location == null && cvm.container.location.hasPermission(context)) ensureLocationOn { cvm.locate(context) }
         }
     }
 
